@@ -1,0 +1,7 @@
+work/ 
+transcript
+*.wlf
+*.ucdb
+*.vstf
+modelsim.ini
+
