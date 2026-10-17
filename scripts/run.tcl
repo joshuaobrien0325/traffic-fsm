@@ -1,6 +1,8 @@
 
-#run.tcl compiles and runs the traffic FSM testbench at several clock frequencies
+# run.tcl compiles and runs the traffic FSM testbench at several clock frequencies
+# saves a coverage report for each clock frequency
 # then prints a pass/fail summary
+#
 # to run - from traffic-fsm folder
 # vsim -c -do scripts/run.tcl
 
@@ -10,13 +12,22 @@ set freqs {1 2 5 10}
 # deletes the old library to ensure a fresh compile is used
 if {[file exists work]} { vdel -lib work -all}
 vlib work
-vlog rtl/traffic_fsm.v tb/tb_traffic_fsm.v
+
+# folder for coverage report
+file mkdir reports
+
+# compiles the design with coverage, only the design is of interest for coverage
+vlog -cover bcesf rtl/traffic_fsm.v
+vlog tb/tb_traffic_fsm.v
 
 # runs the tb once per frequency and records result
 set failures 0
 foreach f $freqs {
-    vsim -voptargs=+acc -onfinish stop -GCLOCK_FREQ=$f work.tb_traffic_fsm
+    vsim -coverage -voptargs=+acc -onfinish stop -GCLOCK_FREQ=$f work.tb_traffic_fsm
     run -all
+
+    #save a coverage report for the run
+    coverage report -details -output reports/coverage_freqs$f.txt
 
     # reads the testbenches error counter from the sim
     set errs [examine -radix decimal /tb_traffic_fsm/errors]
