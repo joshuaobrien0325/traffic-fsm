@@ -25,7 +25,7 @@ module tb_traffic_fsm;
     always @(posedge clk) begin
         if ( north_green && west_green) begin
             $display("Error at %0t: both directions are green", $time);
-            errors + 1;
+            errors = errors + 1;
         end
     end
         
@@ -38,10 +38,10 @@ module tb_traffic_fsm;
 
         repeat (600) @(posedge clk);
 
-        if (erorrs == 0)
+        if (errors == 0)
             $display("Test Passed");
         else 
-            $dislay("Test failed: %0f errors", errors)
+            $display("Test failed: %0d errors", errors);
 
         $finish;
     end
