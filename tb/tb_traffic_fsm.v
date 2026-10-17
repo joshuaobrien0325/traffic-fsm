@@ -1,8 +1,7 @@
 `timescale 1ns/1ps
 
-module tb_traffic_fsm;
+module tb_traffic_fsm #(parameter CLOCK_FREQ = 2);
 
-    localparam CLOCK_FREQ = 2;
     integer errors = 0;
     // signals which connect to the design
     reg clk = 0;
@@ -105,7 +104,7 @@ module tb_traffic_fsm;
         @(negedge clk) n_rst = 1;
 
         // clock runs for 600 cycles
-        repeat (600) @(posedge clk);
+        repeat (2 * 150 * CLOCK_FREQ) @(posedge clk);
 
         // resets during operation, when North is green, then resets mid-phase
         wait (north_green == 1);
