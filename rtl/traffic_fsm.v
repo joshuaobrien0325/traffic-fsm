@@ -112,7 +112,7 @@ module traffic_fsm #(
                 Start_West: begin
                     north_red <= 1'b1;
                     west_red  <= 1'b1;
-                    west_red  <= 1'b1;
+                    west_yellow  <= 1'b1;
                     change_state(West, 5);
                 end
 
