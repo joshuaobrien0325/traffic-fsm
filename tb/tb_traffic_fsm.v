@@ -19,14 +19,14 @@ module tb_traffic_fsm;
         .west_green(west_green)
     );
 
-    // clock cperiod lasts 10ns
+    // clock period lasts 10ns
     always #5 clk = ~clk;
 
     initial begin
 
         n_rst = 0;
         repeat (3) @(posedge clk);
-        n_rst = 1;
+        @(negedge)n_rst = 1;
 
         repeat (600) @(posedge clk);
 

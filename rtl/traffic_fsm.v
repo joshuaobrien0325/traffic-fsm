@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 module traffic_fsm #(
     parameter CLOCK_FREQ = 100
     )(
