@@ -1,9 +1,10 @@
 `timescale 1ns/1ps
 
 module tb_traffic_fsm;
-// signals which connect to the design
+
     localparam CLOCK_FREQ = 2;
     integer errors = 0;
+    // signals which connect to the design
     reg clk = 0;
     reg n_rst = 0;
     wire north_red, north_yellow, north_green;
@@ -32,7 +33,7 @@ module tb_traffic_fsm;
         end
     end
     
-    // a concatonated 6 bit integer value conatining all lights 
+    // a concatenated 6 bit value containing all lights 
     wire [5:0] lights = {north_red, north_yellow, north_green,
                          west_red, west_yellow, west_green};
 
@@ -63,7 +64,7 @@ module tb_traffic_fsm;
             if (lights == prev_lights) begin
                 hold = hold + 1;  // keeps counting until the pattern has changed
             end else begin
-
+    
                 // when lights change the expected number of cycles is checked against the actual number
                 if (started && hold != expected_len[idx]) begin
                     $display("Error at %0t: pattern %b lasted %0d cycles, expected %0d",
@@ -71,7 +72,7 @@ module tb_traffic_fsm;
                     errors = errors + 1;
                 end
 
-                // increases to the next pattern, wraps to 0 if the current inx is 7
+                // increases to the next pattern, wraps to 0 if the current idx is 7
                 // the next pattern is then checked against its expected pattern
                 idx = (idx + 1) % 8; 
                 if (lights != expected_seq[idx]) begin
@@ -85,6 +86,12 @@ module tb_traffic_fsm;
                 hold        = 1;
                 started     = 1;
             end
+        end else begin
+            //while reset is active, return the checkers to their default state
+            prev_lights = 6'b100_100;
+            idx         = 0;
+            hold        = 0;
+            started     = 0;
         end
     end
 
@@ -95,11 +102,28 @@ module tb_traffic_fsm;
         // apply reset for 3 clock cycles reset is released on falling edge to avoid race with design
         n_rst = 0; 
         repeat (3) @(posedge clk);
-        @(negedge clk)n_rst = 1;
+        @(negedge clk) n_rst = 1;
 
         // clock runs for 600 cycles
         repeat (600) @(posedge clk);
 
+        // resets during operation, when North is green, then resets mid-phase
+        wait (north_green == 1);
+        repeat (5) @(posedge clk);
+        @(negedge clk) n_rst = 0;
+
+        // holds rest for 2 full cycles and then checks all lights go back to red
+        repeat (2) @(posedge clk);
+        @(negedge clk);
+        if (lights != 6'b100_100) begin
+            $display("Error at %0t: lights are %b during reset, expected 100100",
+                      $time, lights);
+            errors = errors + 1;
+        end
+
+        // relesease n_rst and then runs 2 more cycles two check it resets correctly
+        n_rst = 1;
+        repeat (2 * 150 * CLOCK_FREQ) @(posedge clk);
         if (errors == 0)
             $display("Test Passed");
         else 
